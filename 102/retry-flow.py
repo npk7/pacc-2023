@@ -1,13 +1,18 @@
 import httpx
-from prefect import flow
+from prefect import flow, task
+from prefect.tasks import task_input_hash
 
-
-@flow(retries=4)
-def fetch():
+@task(cache_key_fn=task_input_hash)
+def fetchtask():
     cat_fact = httpx.get("https://httpstat.us/Random/200,500")
-    if cat_fact.status_code >= 400:
-        raise Exception()
+    cat_fact.raise_for_status()
+    #if cat_fact.status_code >= 400:
+    #    raise Exception()
     print(cat_fact.text)
+
+@flow
+def fetch():
+    fetchtask()
 
 
 if __name__ == "__main__":
